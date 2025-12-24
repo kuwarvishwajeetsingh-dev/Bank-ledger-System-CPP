@@ -120,6 +120,7 @@ Concepts:
   * Input Validation
   * STL (`vector`, `algorithm`)
   Compiler:** GCC / MinGW
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/4bb22faa-0a53-4dd7-9575-1a645b25e501" />
 
 
 
@@ -150,7 +151,5 @@ This project strengthened my understanding of:
 
 Kuwar Vishwajeet Singh
 B.Tech (CSE) GCET | BS Data Science – IIT Madras
-
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/de316464-d28e-4a63-9c91-0c265516f60e" />
 
 ⭐ If you find this project valuable, consider starring the repository!
