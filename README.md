@@ -147,8 +147,8 @@ This project strengthened my understanding of:
  👨‍💻 Author
 
 Kuwar Vishwajeet Singh
-B.Tech (CSE) | BS Data Science – IIT Madras
-Aspiring Software Engineer | Backend & Systems Enthusiast
+B.Tech (CSE) GCET | BS Data Science – IIT Madras
+
 
 ⭐ If you find this project valuable, consider starring the repository!
 
