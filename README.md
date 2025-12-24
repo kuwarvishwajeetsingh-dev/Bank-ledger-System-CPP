@@ -33,9 +33,8 @@ Project Purpose
 This project was built for learning and practicing C++ fundamentals, OOP design, and console-based application development.
 
 License
+MIT License
 Author
 Kuwar Vishwajeet Singh
 
-
-MIT License
 
