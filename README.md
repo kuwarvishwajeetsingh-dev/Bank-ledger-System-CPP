@@ -7,6 +7,7 @@ A console-based Bank Ledger System implemented in C++ using OOP concept
 A robust, menu-driven Banking Management System** developed in **C++** that simulates real-world banking operations with **persistent storage, authentication, and admin controls**.
 Designed with **Object-Oriented Programming (OOP)** principles and **file handling**, this project demonstrates production-grade console application design
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/819fd2b1-be4d-48ee-85cd-4bb5826d0276" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/90f59271-3032-4fbd-b13d-1f8f0eb13b4e" />
 
 *Object-Oriented Design** using `Account`, `Transaction`, and `Ledger` classes
   *Persistent Data Storage** using file handling (`fstream`)
@@ -150,5 +151,6 @@ This project strengthened my understanding of:
 Kuwar Vishwajeet Singh
 B.Tech (CSE) GCET | BS Data Science – IIT Madras
 
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/de316464-d28e-4a63-9c91-0c265516f60e" />
 
 ⭐ If you find this project valuable, consider starring the repository!
