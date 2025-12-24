@@ -1,0 +1,397 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <iomanip>
+#include <algorithm>
+#include <limits>
+#include <fstream>
+#include <cstdlib> // for system()
+
+using namespace std;
+
+const double MIN_BALANCE = 500.0;
+
+// ---------- Safe Input Helpers ----------
+bool safeInt(int &x)
+{
+    cin >> x;
+    if (cin.fail())
+    {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        return false;
+    }
+    return true;
+}
+
+bool safeDouble(double &x)
+{
+    cin >> x;
+    if (cin.fail())
+    {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        return false;
+    }
+    return true;
+}
+
+// ---------- Transaction ----------
+class Transaction
+{
+public:
+    int txnID, accountID;
+    string type;
+    double amount;
+
+    Transaction(int t, int a, string ty, double am)
+        : txnID(t), accountID(a), type(ty), amount(am) {}
+};
+
+// ---------- Account ----------
+class Account
+{
+public:
+    int accountID;
+    string name;
+    string pin; // PIN stored as string
+    double balance;
+
+    Account(int id, string n, string p)
+        : accountID(id), name(n), pin(p), balance(0) {}
+
+    bool checkPIN(const string &p) { return pin == p; }
+
+    void display()
+    {
+        cout << "\nAccount ID : " << setw(5) << setfill('0') << accountID;
+        cout << "\nName       : " << name;
+        cout << "\nBalance    : Rs " << balance << "\n";
+    }
+};
+
+// ---------- Ledger ----------
+class Ledger
+{
+    vector<Account> accounts;
+    vector<Transaction> transactions;
+    int nextAccountID = 1;
+    int nextTxnID = 1000;
+
+    const string dataFolder = "BankData";
+    const string dataFile = "BankData/accounts.txt";
+
+    // Create folder if it doesn't exist
+    void createFolder()
+    {
+#ifdef _WIN32
+        system(("mkdir \"" + dataFolder + "\" >nul 2>&1").c_str());
+#else
+        system(("mkdir -p \"" + dataFolder + "\"").c_str());
+#endif
+    }
+
+    // Load accounts from file
+    void loadAccounts()
+    {
+        createFolder(); // ensure folder exists
+        ifstream fin(dataFile);
+        if (!fin)
+            return;
+
+        int id;
+        string name, pin;
+        double balance;
+        int maxID = 0;
+
+        while (fin >> id >> name >> pin >> balance)
+        {
+            accounts.emplace_back(id, name, pin);
+            accounts.back().balance = balance;
+            if (id > maxID)
+                maxID = id;
+        }
+        fin.close();
+        nextAccountID = maxID + 1; // correct next ID
+    }
+
+    // Save accounts to file
+    void saveAccounts()
+    {
+        ofstream fout(dataFile);
+        for (auto &a : accounts)
+        {
+            fout << a.accountID << " " << a.name << " " << a.pin << " " << a.balance << "\n";
+        }
+        fout.close();
+    }
+
+    Account *findAccount(int id)
+    {
+        for (auto &a : accounts)
+            if (a.accountID == id)
+                return &a;
+        return nullptr;
+    }
+
+    Account *authenticate(int id)
+    {
+        string pin;
+        cout << "Enter PIN: ";
+        cin >> pin;
+
+        Account *acc = findAccount(id);
+        if (acc && acc->checkPIN(pin))
+            return acc;
+
+        return nullptr;
+    }
+
+public:
+    Ledger() { loadAccounts(); }
+
+    void createAccount()
+    {
+        string name, pin;
+        cout << "Enter Name: ";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        getline(cin, name);
+
+        cout << "Set 4-digit PIN: ";
+        cin >> pin;
+        if (pin.length() != 4)
+        {
+            cout << "Invalid PIN length\n";
+            return;
+        }
+
+        accounts.emplace_back(nextAccountID, name, pin);
+        cout << "Account created. ID: " << nextAccountID++ << "\n";
+        saveAccounts();
+    }
+
+    void deposit()
+    {
+        int id;
+        double amt;
+        cout << "Account ID: ";
+        if (!safeInt(id))
+            return;
+
+        Account *acc = authenticate(id);
+        if (!acc)
+        {
+            cout << "Invalid Data\n";
+            return;
+        }
+
+        cout << "Amount: ";
+        if (!safeDouble(amt) || amt <= 0)
+        {
+            cout << "Invalid Data\n";
+            return;
+        }
+
+        acc->balance += amt;
+        transactions.emplace_back(nextTxnID++, id, "DEPOSIT", amt);
+        cout << "Deposit successful\n";
+        saveAccounts();
+    }
+
+    void withdraw()
+    {
+        int id;
+        double amt;
+        cout << "Account ID: ";
+        if (!safeInt(id))
+            return;
+
+        Account *acc = authenticate(id);
+        if (!acc)
+        {
+            cout << "Invalid Data\n";
+            return;
+        }
+
+        cout << "Amount: ";
+        if (!safeDouble(amt) || amt <= 0)
+        {
+            cout << "Invalid Data\n";
+            return;
+        }
+
+        if (acc->balance - amt < MIN_BALANCE)
+        {
+            cout << "Maintain Rs 500 minimum\n";
+            return;
+        }
+
+        acc->balance -= amt;
+        transactions.emplace_back(nextTxnID++, id, "WITHDRAW", amt);
+        cout << "Withdrawal successful\n";
+        saveAccounts();
+    }
+
+    void showAccount()
+    {
+        int id;
+        cout << "Account ID: ";
+        if (!safeInt(id))
+            return;
+
+        Account *acc = findAccount(id);
+        if (!acc)
+        {
+            cout << "Invalid Data\n";
+            return;
+        }
+
+        acc->display();
+    }
+
+    void searchByName()
+    {
+        string key;
+        cout << "Search Name: ";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        getline(cin, key);
+
+        bool found = false;
+        for (auto &a : accounts)
+        {
+            if (a.name.find(key) != string::npos)
+            {
+                a.display();
+                found = true;
+            }
+        }
+        if (!found)
+            cout << "Invalid Data\n";
+    }
+
+    void deleteAccount()
+    {
+        int id;
+        cout << "Account ID: ";
+        if (!safeInt(id))
+            return;
+
+        Account *acc = findAccount(id);
+        if (!acc)
+        {
+            cout << "Invalid Data\n";
+            return;
+        }
+
+        string pin;
+        cout << "Enter PIN: ";
+        cin >> pin;
+        if (!acc->checkPIN(pin))
+        {
+            cout << "Invalid PIN\n";
+            return;
+        }
+
+        accounts.erase(remove_if(accounts.begin(), accounts.end(),
+                                 [&](Account &a)
+                                 { return a.accountID == id; }),
+                       accounts.end());
+        cout << "Account deleted successfully\n";
+        saveAccounts();
+    }
+
+    void adminView()
+    {
+        string adminPass = "admin123", inputPass;
+        cout << "Enter Admin Password: ";
+        cin >> inputPass;
+        if (inputPass != adminPass)
+        {
+            cout << "Access Denied\n";
+            return;
+        }
+
+        cout << "\n--- All Accounts ---\n";
+        cout << left
+             << setw(10) << "ID"
+             << setw(20) << "Name"
+             << setw(10) << "PIN"
+             << setw(15) << "Balance" << "\n";
+        cout << string(55, '-') << "\n"; // separator line
+
+        for (auto &a : accounts)
+        {
+            cout << left
+                 << setw(10) << a.accountID
+                 << setw(20) << a.name
+                 << setw(10) << a.pin
+                 << setw(15) << fixed << setprecision(2) << a.balance
+                 << "\n";
+        }
+    }
+
+    void menu()
+    {
+        while (true)
+        {
+            int choice;
+            cout << "\n1.Create 2.Deposit 3.Withdraw 4.Show 5.Search 6.Delete 7.Admin 8.Exit\nChoice: ";
+            if (!safeInt(choice))
+                continue;
+
+            switch (choice)
+            {
+            case 1:
+                createAccount();
+                break;
+            case 2:
+                deposit();
+                break;
+            case 3:
+                withdraw();
+                break;
+            case 4:
+                showAccount();
+                break;
+            case 5:
+                searchByName();
+                break;
+            case 6:
+                deleteAccount();
+                break;
+            case 7:
+                adminView();
+                break;
+            case 8:
+                cout << "Exiting program...\n";
+                return;
+            default:
+                cout << "Invalid Data\n";
+            }
+        }
+    }
+};
+
+// ---------- Main ----------
+int main()
+{
+    string c;
+
+    cout << "This is protected by Password by Admin" << endl;
+    cout << "Password is adminx :: x=100+23" << endl;
+    cout << "Enter Password:";
+    cin >> c;
+
+    if (c == "admin123")
+    {
+        cout<<"ACCESS GRANTED!!!";
+        Ledger ledger;
+        ledger.menu();
+    }
+    else
+    {
+        cout << "Access Denied!!! ";
+    }
+
+    return 0;
+}
